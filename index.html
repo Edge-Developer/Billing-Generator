@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Play Billing Helper</title>
+</head>
+<body style="padding: 5%">
+<label for="input" style="font-size: 1.1em;">Input the Base64-encoded RSA public key for your App without any spaces:</label>
+<br><br>
+<textarea id="input" style="font-size: 1.0em; width: 90%; height: 80px;padding: 3%;   resize: none;"></textarea>
+<br><br>
+<button onclick="generateStub()" style="width: 80%; padding: 2%; font-size: large">Generate</button>
+<br><br>
+<textarea id="txtarea" style="font-size: 1.0em; width: 90%; height: 600px;padding: 3%; resize: none; background-color: whitesmoke" readonly></textarea>
+
+
+<script>
+
+    function changeCase(str) {
+        var changed = '';
+
+        for (var i = 0; i < str.length; i++) {
+            var char = str.charAt(i);
+            var charCodeInt = char.charCodeAt(0);
+            if (charCodeInt >= 37 && charCodeInt <= 46) {
+                var asciiChar = String.fromCharCode(48 + (charCodeInt - 37));
+                changed += asciiChar;
+            } else if (charCodeInt >= 48 && charCodeInt <= 57) {
+                var asciiChar = String.fromCharCode(37 + (charCodeInt - 48));
+                changed += asciiChar;
+            } else if (charCodeInt >= 97 && charCodeInt <= 122) {
+                changed += char.toUpperCase();
+            } else if (charCodeInt >= 65 && charCodeInt <= 90) {
+                changed += char.toLowerCase()
+            } else changed += char;
+        }
+        return changed
+    }
+
+
+    function generateStub() {
+        document.getElementById("txtarea").value = ""
+
+        var value = document.getElementById("input").value;
+        var lowerCaseKey = changeCase(value);
+        if (lowerCaseKey.length < 200) {
+            alert("Input something")
+            return
+        }
+
+        var list = lowerCaseKey.match(/.{1,56}/g);
+
+        for (var i = 0; i < list.length; i++) {
+            document.getElementById("txtarea").value += "fun base64Key" + (i + 1) + "() = \"" + list[i] + "\"\n\n";
+        }
+
+        document.getElementById("txtarea").value += "  fun String.swapBase64Chars() = map {\n" +
+            "        when {\n" +
+            "            it.isUpperCase() -> it.toLowerCase() // Swap upper with lower case char.\n" +
+            "            it.isLowerCase() -> it.toUpperCase() // Swap lower with upper case char.\n" +
+            "            it.isDigit() -> (37 + (it.toInt() - 48)).toChar() // Swap digit (0-9) with ASCII char set 37 - 46.\n" +
+            "            it.isDefined() -> if (it.toInt() >= 37 && it.toInt() <= 46) (48 + (it.toInt() - 37)).toChar() else it // Swap ASCII char set 37 - 46 with digit (0-9).\n" +
+            "            else -> it\n" +
+            "        }\n" +
+            "    }.joinToString(\"\")";
+
+        document.getElementById("txtarea").value += "\n\n  var BASE_64_ENCODED_PUBLIC_KEY = \"\"\n\n  fun getDecodedBase64publickey() {\n" +
+            "        BASE_64_ENCODED_PUBLIC_KEY = (base64Key1() + base64Key2() + base64Key3() + base64Key4() + base64Key5() + base64Key6() + base64Key7()).swapBase64Chars()\n" +
+            "    }"
+
+    }
+
+</script>
+
+</body>
+
+</html>
